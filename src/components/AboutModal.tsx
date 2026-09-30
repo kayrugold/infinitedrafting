@@ -105,7 +105,16 @@ export function AboutModal({
 }: AboutModalProps) {
   const [activeTab, setActiveTab] = useState<'about' | 'privacy' | 'terms' | 'deletion'>(defaultTab);
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const { needRefresh, updateStatus, checkForUpdates, applyUpdate } = usePWAUpdate();
+  const { 
+    needRefresh, 
+    updateStatus, 
+    checkForUpdates, 
+    applyUpdate,
+    freezeUpdates,
+    setFreezeUpdates,
+    activeVersion,
+    setActiveVersion
+  } = usePWAUpdate();
 
   useEffect(() => {
     if (isOpen) {
@@ -272,7 +281,7 @@ export function AboutModal({
                       Since this app is distributed as a Progressive Web App (PWA) / Google Play TWA, clicking the button below instantly checks the server and downloads any new changes, features, or bug fixes we've published since release without waiting for Play Store reviews!
                     </p>
                   </div>
-
+ 
                   <div className="shrink-0 w-full sm:w-auto">
                     {updateStatus === 'available' ? (
                       <button
@@ -285,19 +294,22 @@ export function AboutModal({
                     ) : (
                       <button
                         onClick={checkForUpdates}
-                        disabled={updateStatus === 'checking'}
+                        disabled={updateStatus === 'checking' || freezeUpdates}
                         className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 ${
                           updateStatus === 'checking'
                             ? 'bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-700 dark:text-slate-400'
-                            : isDarkMode
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                              : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
+                            : freezeUpdates
+                              ? 'bg-amber-100 border border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400 cursor-not-allowed'
+                              : isDarkMode
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
                         }`}
                       >
                         <RefreshCw size={14} className={updateStatus === 'checking' ? 'animate-spin' : ''} />
                         <span>
                           {updateStatus === 'checking' && 'Checking...'}
-                          {updateStatus === 'idle' && 'Check for Updates'}
+                          {freezeUpdates && 'Updates Locked \u1F512'}
+                          {updateStatus === 'idle' && !freezeUpdates && 'Check for Updates'}
                           {updateStatus === 'up-to-date' && 'App is Up to Date! \u2705'}
                           {updateStatus === 'error' && 'Error Checking Updates'}
                         </span>
@@ -306,8 +318,42 @@ export function AboutModal({
                   </div>
                 </div>
 
+                {/* Freeze Updates & Version Dropdown Picker */}
+                <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      id="freeze-updates"
+                      checked={freezeUpdates}
+                      onChange={(e) => setFreezeUpdates(e.target.checked)}
+                      className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
+                    />
+                    <label htmlFor="freeze-updates" className="text-xs font-bold cursor-pointer select-none text-slate-600 dark:text-slate-300">
+                      Freeze Updates (Stay locked on current version)
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                      Active App Version:
+                    </span>
+                    <select
+                      value={activeVersion}
+                      onChange={(e) => setActiveVersion(e.target.value as 'v1.1.0' | 'v1.0.0')}
+                      className={`text-xs font-extrabold rounded-xl px-3 py-1.5 border focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${
+                        isDarkMode
+                          ? 'bg-slate-900 border-slate-700 text-slate-200'
+                          : 'bg-white border-slate-200 text-slate-800 shadow-2xs'
+                      }`}
+                    >
+                      <option value="v1.1.0">v1.1.0 (Direct APK Sideload)</option>
+                      <option value="v1.0.0">v1.0.0 (Original Core)</option>
+                    </select>
+                  </div>
+                </div>
+ 
                 {/* Additional inline notification when update is found */}
-                {needRefresh && (
+                {needRefresh && !freezeUpdates && (
                   <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/80 rounded-xl flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300 animate-in slide-in-from-top-1">
                     <Sparkles size={14} className="text-emerald-500 shrink-0 mt-0.5" />
                     <div>
@@ -318,40 +364,42 @@ export function AboutModal({
               </div>
 
               {/* Android APK Download Card */}
-              <div className={`border rounded-2xl p-4 sm:p-5 transition-all shadow-xs ${
-                isDarkMode 
-                  ? 'bg-slate-800/85 border-slate-700/80' 
-                  : 'bg-blue-50/50 border-blue-100'
-              }`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                      <Smartphone size={12} className="text-emerald-500" />
-                      Direct Native Android Installation
+              {activeVersion === 'v1.1.0' && (
+                <div className={`border rounded-2xl p-4 sm:p-5 transition-all shadow-xs ${
+                  isDarkMode 
+                    ? 'bg-slate-800/85 border-slate-700/80' 
+                    : 'bg-blue-50/50 border-blue-100'
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Smartphone size={12} className="text-emerald-500" />
+                        Direct Native Android Installation
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-base font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                          S-Pen Optimized APK
+                        </span>
+                      </div>
+                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} leading-relaxed`}>
+                        Download and install the native Android app file directly to your tablet. Highly recommended for offline drawing, low-latency stylus drawing, and standalone app-window multitasking!
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-base font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                        S-Pen Optimized APK
-                      </span>
+  
+                    <div className="shrink-0 w-full sm:w-auto">
+                      <a
+                        href="/app-release-signed.apk"
+                        download="InfiniteDrafting.apk"
+                        rel="external"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                      >
+                        <Download size={14} />
+                        <span>Download Android APK</span>
+                      </a>
                     </div>
-                    <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} leading-relaxed`}>
-                      Download and install the native Android app file directly to your tablet. Highly recommended for offline drawing, low-latency stylus drawing, and standalone app-window multitasking!
-                    </p>
-                  </div>
-
-                  <div className="shrink-0 w-full sm:w-auto">
-                    <a
-                      href="/app-release-signed.apk"
-                      download="InfiniteDrafting.apk"
-                      rel="external"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
-                    >
-                      <Download size={14} />
-                      <span>Download Android APK</span>
-                    </a>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Developer Studio Card */}
               <div className={`border rounded-2xl p-4 sm:p-5 shadow-xs transition-colors ${
