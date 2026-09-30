@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kayrugold.infinitedrafting",
+      "sha256_cert_fingerprints": [
+        "71:2E:3D:CE:83:48:40:07:0C:8D:34:FC:4C:17:BB:04:F1:26:BB:96:7B:66:49:6A:B3:1C:BE:49:6E:E1:FF:D1"
+      ]
+    }
+  }
+]
