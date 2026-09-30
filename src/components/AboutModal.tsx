@@ -317,6 +317,42 @@ export function AboutModal({
                 )}
               </div>
 
+              {/* Android APK Download Card */}
+              <div className={`border rounded-2xl p-4 sm:p-5 transition-all shadow-xs ${
+                isDarkMode 
+                  ? 'bg-slate-800/85 border-slate-700/80' 
+                  : 'bg-blue-50/50 border-blue-100'
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                      <Smartphone size={12} className="text-emerald-500" />
+                      Direct Native Android Installation
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-base font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        S-Pen Optimized APK
+                      </span>
+                    </div>
+                    <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} leading-relaxed`}>
+                      Download and install the native Android app file directly to your tablet. Highly recommended for offline drawing, low-latency stylus drawing, and standalone app-window multitasking!
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 w-full sm:w-auto">
+                    <a
+                      href="/app-release-signed.apk"
+                      download="InfiniteDrafting.apk"
+                      rel="external"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                    >
+                      <Download size={14} />
+                      <span>Download Android APK</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
               {/* Developer Studio Card */}
               <div className={`border rounded-2xl p-4 sm:p-5 shadow-xs transition-colors ${
                 isDarkMode 
