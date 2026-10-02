@@ -392,7 +392,8 @@ export default function App() {
       try {
         const { layers: parsedLayers, camera: parsedCamera } = await deserializeSessionData(session.layersData);
         setLayers(parsedLayers);
-        setActiveLayerId(parsedLayers[0]?.id || '1');
+        const activeLayer = parsedLayers.find(l => !l.locked) || parsedLayers[0];
+        setActiveLayerId(activeLayer?.id || '1');
         setCurrentSessionId(session.id);
         setCurrentSessionTitle(session.title);
         setCurrentSessionIsCloud(!session.isLocal);
@@ -491,7 +492,8 @@ export default function App() {
         setCurrentSessionTitle(titleToUse);
         setCurrentSessionIsCloud(false);
         setLayers(importedLayers);
-        setActiveLayerId(importedLayers[0]?.id || '1');
+        const activeLayer = importedLayers.find(l => !l.locked) || importedLayers[0];
+        setActiveLayerId(activeLayer?.id || '1');
         if (importedCamera) {
           setCamera(importedCamera);
           canvasRef.current?.setCamera(importedCamera);
