@@ -359,18 +359,24 @@ export const CanvasWorkspace = forwardRef<CanvasWorkspaceRef, CanvasProps>(({
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       const camera = cameraRef.current;
-      if (e.ctrlKey || e.metaKey) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      if (e.shiftKey) {
+        // SHIFT + scroll wheel: Pan left & right
+        camera.x -= e.deltaY;
+      } else if (e.altKey) {
+        // ALT + scroll wheel: Pan up & down
+        camera.y -= e.deltaY;
+      } else {
+        // Standard scroll wheel or Ctrl + Scroll: Zoom centered on mouse
         const zoomFactor = Math.pow(0.997, e.deltaY);
         const newZoom = Math.max(0.1, Math.min(camera.zoom * zoomFactor, 20));
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        
         camera.x = mouseX - (mouseX - camera.x) * (newZoom / camera.zoom);
         camera.y = mouseY - (mouseY - camera.y) * (newZoom / camera.zoom);
         camera.zoom = newZoom;
-      } else {
-        camera.x -= e.deltaX;
-        camera.y -= e.deltaY;
       }
       render();
       onCameraChange?.(camera);
