@@ -110,9 +110,11 @@ export const CanvasWorkspace = forwardRef<CanvasWorkspaceRef, CanvasProps>(({
     lockedAngle: number | null;
     lockedRadius: number | null;
     lockedLocalY: number | null;
-    interactingWith: 'none' | 'protractor-move' | 'protractor-rotate' | 'ruler-p1' | 'ruler-p2' | 'ruler-move';
+    interactingWith: 'none' | 'protractor-move' | 'protractor-rotate' | 'ruler-p1' | 'ruler-p2' | 'ruler-move' | 'canvas-pan';
     lastPinchDist: number | null;
     lastPinchCenter: Point | null;
+    lastPointerX: number | null;
+    lastPointerY: number | null;
   }>({
     isDrawing: false,
     currentStroke: null,
@@ -127,7 +129,9 @@ export const CanvasWorkspace = forwardRef<CanvasWorkspaceRef, CanvasProps>(({
     lockedLocalY: null,
     interactingWith: 'none',
     lastPinchDist: null,
-    lastPinchCenter: null
+    lastPinchCenter: null,
+    lastPointerX: null,
+    lastPointerY: null
   });
 
   const mutableLayersRef = useRef<Layer[]>([]);
@@ -1153,6 +1157,18 @@ export const CanvasWorkspace = forwardRef<CanvasWorkspaceRef, CanvasProps>(({
 
     const isPenOnly = inputMode === 'pen-only';
 
+    // Handle middle-click or right-click canvas panning on desktop
+    const isMiddleClick = e.pointerType === 'mouse' && (e.button === 1 || e.buttons === 4);
+    const isRightClick = e.pointerType === 'mouse' && (e.button === 2 || e.buttons === 2);
+
+    if (isMiddleClick || isRightClick) {
+      e.preventDefault();
+      state.interactingWith = 'canvas-pan';
+      state.lastPointerX = e.clientX;
+      state.lastPointerY = e.clientY;
+      return;
+    }
+
     if (e.pointerType === 'touch') {
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (touches.size >= 2) {
@@ -1384,6 +1400,21 @@ export const CanvasWorkspace = forwardRef<CanvasWorkspaceRef, CanvasProps>(({
           return;
         }
       }
+    }
+
+    // Desktop mouse middle-click / right-click drag panning
+    if (state.interactingWith === 'canvas-pan') {
+      if (state.lastPointerX !== null && state.lastPointerY !== null) {
+        const dx = e.clientX - state.lastPointerX;
+        const dy = e.clientY - state.lastPointerY;
+        camera.x += dx;
+        camera.y += dy;
+        state.lastPointerX = e.clientX;
+        state.lastPointerY = e.clientY;
+        render();
+        onCameraChange?.(camera);
+      }
+      return;
     }
 
     // Ruler handles movement

@@ -56,6 +56,7 @@ function ToolButton({ icon, active, disabled, onClick, title }: ToolButtonProps)
 
 export default function App() {
   const { needRefresh, applyUpdate } = usePWAUpdate();
+  const [dismissedUpdate, setDismissedUpdate] = useState(false);
   const [layers, setLayers] = useState<Layer[]>([{ id: '1', name: 'Layer 1', visible: true, locked: false, strokes: [] }]);
   const [activeLayerId, setActiveLayerId] = useState<string>('1');
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 });
@@ -308,7 +309,12 @@ export default function App() {
       showToast('Signed in successfully! ☁️', 'success');
     } catch (e: any) {
       console.error('Login failed', e);
-      if (e.code !== 'auth/popup-closed-by-user') {
+      if (e.code === 'auth/unauthorized-domain') {
+        showToast(
+          `Domain "${window.location.hostname}" is not authorized in Firebase. Add it in Firebase Console > Authentication > Settings > Authorized domains.`,
+          'error'
+        );
+      } else if (e.code !== 'auth/popup-closed-by-user') {
         showToast('Sign in failed: ' + (e.message || 'Unknown error'), 'error');
       }
     }
@@ -1235,7 +1241,7 @@ export default function App() {
         )}
       </div>
 
-      {needRefresh && (
+      {needRefresh && !dismissedUpdate && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100vw-2rem)] bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl rounded-2xl border border-slate-800 dark:border-slate-200 p-4 flex items-center justify-between gap-4 pointer-events-auto transition-all animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5">
@@ -1246,12 +1252,21 @@ export default function App() {
               <p className="text-[11px] opacity-80 leading-snug">A new version of Infinite Drafting is ready. Click to relaunch and load updates.</p>
             </div>
           </div>
-          <button
-            onClick={applyUpdate}
-            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl active:scale-95 transition-all shadow-md shrink-0"
-          >
-            Relaunch
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={applyUpdate}
+              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl active:scale-95 transition-all shadow-md shrink-0"
+            >
+              Relaunch
+            </button>
+            <button
+              onClick={() => setDismissedUpdate(true)}
+              className="p-1.5 text-slate-400 hover:text-white dark:text-slate-500 dark:hover:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-lg transition-colors shrink-0"
+              title="Dismiss Update"
+            >
+              <X size={14} />
+            </button>
+          </div>
         </div>
       )}
 
