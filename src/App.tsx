@@ -97,6 +97,39 @@ export default function App() {
   const [showColorWheel, setShowColorWheel] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [aboutDefaultTab, setAboutDefaultTab] = useState<'about' | 'privacy' | 'terms' | 'deletion'>('about');
+
+  const toggleLayers = () => {
+    setShowLayers(prev => {
+      const next = !prev;
+      if (next) {
+        setShowColorWheel(false);
+        setShowLibrary(false);
+      }
+      return next;
+    });
+  };
+
+  const toggleColorWheel = () => {
+    setShowColorWheel(prev => {
+      const next = !prev;
+      if (next) {
+        setShowLayers(false);
+        setShowLibrary(false);
+      }
+      return next;
+    });
+  };
+
+  const toggleLibrary = () => {
+    setShowLibrary(prev => {
+      const next = !prev;
+      if (next) {
+        setShowLayers(false);
+        setShowColorWheel(false);
+      }
+      return next;
+    });
+  };
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('infinite_drafting_theme');
@@ -777,7 +810,11 @@ export default function App() {
         ) : (
           <div className="pointer-events-auto flex items-center bg-white/95 backdrop-blur-md border border-slate-200 hover:border-blue-400 rounded-full shadow-sm pl-2.5 pr-1.5 py-1 gap-1 max-w-[170px] sm:max-w-[240px] group transition-colors">
             <button
-              onClick={() => setShowLibrary(true)}
+              onClick={() => {
+                setShowLibrary(true);
+                setShowLayers(false);
+                setShowColorWheel(false);
+              }}
               className="flex items-center gap-1.5 min-w-0 flex-1 text-xs font-semibold text-slate-700 hover:text-blue-600 text-left truncate"
               title={`Active Draft: ${currentSessionTitle} (${currentSessionIsCloud ? 'Cloud' : 'Device'}). Tap to open Library.`}
             >
@@ -882,7 +919,7 @@ export default function App() {
               <div 
                 className={cn("relative flex items-center justify-center p-1 mt-1 rounded-lg cursor-pointer transition-colors", showColorWheel ? "bg-slate-200" : "hover:bg-slate-100")} 
                 title="Stroke Color"
-                onClick={() => setShowColorWheel(!showColorWheel)}
+                onClick={toggleColorWheel}
               >
                 <div className="w-6 h-6 rounded-full border border-slate-300 shadow-sm overflow-hidden" style={{ backgroundColor: color }} />
               </div>
@@ -953,8 +990,8 @@ export default function App() {
               <ToolButton icon={<Copy size={20}/>} active={false} onClick={handleCopy} disabled={tool !== 'select'} title="Copy" />
               <ToolButton icon={<ClipboardPaste size={20}/>} active={false} onClick={handlePaste} disabled={clipboardStrokes.length === 0} title="Paste" />
               <div className="w-full h-px bg-slate-200 my-1" />
-              <ToolButton icon={<Layers size={20}/>} active={showLayers} onClick={() => setShowLayers(!showLayers)} title="Layers" />
-              <ToolButton icon={<FolderOpen size={20}/>} active={showLibrary} onClick={() => setShowLibrary(!showLibrary)} title="Library" />
+              <ToolButton icon={<Layers size={20}/>} active={showLayers} onClick={toggleLayers} title="Layers" />
+              <ToolButton icon={<FolderOpen size={20}/>} active={showLibrary} onClick={toggleLibrary} title="Library" />
               <ToolButton icon={<Save size={20}/>} active={false} onClick={() => handleSave(false)} disabled={isSaving} title="Save Draft (Device)" />
               <ToolButton 
                 icon={<Focus size={20}/>} 
@@ -1204,7 +1241,7 @@ export default function App() {
           </div>
         )}
 
-        {showLayers && !showLibrary && !showColorWheel && (
+        {showLayers && (
           <div className="pointer-events-auto bg-white/95 backdrop-blur-md shadow-xl border border-slate-200 rounded-2xl p-3 sm:p-4 w-[calc(100vw-4.25rem)] sm:w-72 max-w-[320px] flex flex-col gap-3 max-h-[85vh]">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
               <h3 className="font-bold text-slate-800 text-sm">Layers</h3>
@@ -1270,7 +1307,7 @@ export default function App() {
           </div>
         )}
 
-        {showColorWheel && !showLibrary && !showLayers && (
+        {showColorWheel && (
           <ColorPickerWheel 
             color={color} 
             onChange={setColor} 
